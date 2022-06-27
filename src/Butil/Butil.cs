@@ -1,37 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.JSInterop;
+
+namespace Butil;
 
 public static class Butil
 {
     private static bool _isInitialized;
-    private static IJSRuntime _jsRuntime = default!;
-    private static Dictionary<Guid, Action> _listeners = new();
+    private static IJSRuntime _js = default!;
 
     public static void Init(IJSRuntime jsRuntime)
     {
         if (_isInitialized) return;
 
         _isInitialized = true;
-        _jsRuntime = jsRuntime;
-        var dotnetObj = DotNetObjectReference.Create(new ButilDotnetObject());
-        _jsRuntime.InvokeVoidAsync("butil.init", dotnetObj);
+        _js = jsRuntime;
     }
 
-    public static void Register(string elementName, string eventName, string dotnetMethodName, Guid dotnetMethodId, string[] selectedMembers)
+    internal static void AddEventListener(string elementName, string eventName, string dotnetMethodName, Guid dotnetListenerId, string[] selectedMembers, object options = null)
     {
-        _jsRuntime.InvokeVoidAsync("butil.register", elementName, eventName, dotnetMethodName, dotnetMethodId, selectedMembers);
+        _js.InvokeVoidAsync("butil.addEventListener", elementName, eventName, dotnetMethodName, dotnetListenerId, selectedMembers, options);
     }
 
-    public static Action GetListener(Guid id)
+    internal static void RemoveEventListener(string elementName, string eventName, Guid dotnetListenerId, object options = null)
     {
-        return _listeners[id];
-    }
-
-    public static Guid SetListener(Action listener)
-    {
-        var id = Guid.NewGuid();
-        _listeners[id] = listener;
-        return id;
+        _js.InvokeVoidAsync("butil.removeEventListener", elementName, eventName, dotnetListenerId, options);
     }
 }

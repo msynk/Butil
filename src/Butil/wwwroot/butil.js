@@ -1,24 +1,24 @@
 var butil = (function () {
-    let _dotnetObj = null;
+    const _handlers = {};
 
     return {
-        init,
-        register
+        addEventListener,
+        removeEventListener
     };
 
-    function init(dotnetObj) {
-        _dotnetObj = dotnetObj;
-    }
-
-    function register(elementName, eventName, dotnetMethodName, dotnetMethodId, selectedMembers, options) {
+    function addEventListener(elementName, eventName, dotnetMethodName, dotnetListenerId, selectedMembers, options) {
         const handler = e => {
-            _dotnetObj.invokeMethodAsync(dotnetMethodName, dotnetMethodId, selectedMembers && select(e, selectedMembers));
+            DotNet.invokeMethodAsync('Butil', dotnetMethodName, dotnetListenerId, selectedMembers && selectedMembers.reduce((pre, cur) => (pre[cur] = e[cur], pre), {}));
         };
+
+        _handlers[dotnetListenerId] = handler;
 
         window[elementName].addEventListener(eventName, handler, options);
     }
 
-    function select(source, members) {
-        return members.reduce((pre, cur) => pre[cur] = source[cur], {});
+    function removeEventListener(elementName, eventName, dotnetListenerId, options) {
+        const handler = _handlers[dotnetListenerId];
+
+        window[elementName].removeEventListener(eventName, handler, options);
     }
 }());

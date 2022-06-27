@@ -5,16 +5,34 @@
 
 <h1>Hello, world!</h1>
 
-<button @onclick=RegisterHandler>Register</button>
+<button @onclick=AddEvenetListener>AddEvenetListener</button> &nbsp; <button @onclick=RemoveEvenetListener>RemoveEvenetListener</button>
+<hr />
+<div>Is Registered: @isRegistered</div>
 
 @code {
-    private void RegisterHandler()
+    private bool isRegistered = false;
+
+    private Action<DomKeyboardEventArgs> handler = default!;
+
+    protected override void OnInitialized()
     {
-        var handler = () =>
+        handler = (DomKeyboardEventArgs arg) =>
         {
-            jsRuntime.InvokeVoidAsync("console.log", "hello from C#", DateTime.Now.Ticks / 1000);
+            jsRuntime.InvokeVoidAsync("console.log", "KeyDown from C#:", arg.Code);
         };
 
-        Document.AddEventListener("click", handler, false);
+        base.OnInitialized();
+    }
+
+    private void AddEvenetListener()
+    {
+        Document.AddEventListener(DomEvents.KeyDown, handler);
+        isRegistered = true;
+    }
+
+    private void RemoveEvenetListener()
+    {
+        Document.RemoveEventListener(DomEvents.KeyDown, handler);
+        isRegistered = false;
     }
 }
